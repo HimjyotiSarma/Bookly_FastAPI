@@ -1,0 +1,35 @@
+from fastapi import FastAPI, HTTPException, status
+from src.books.routes import book_router
+from src.auth.routes import user_router
+from .config import settings
+from contextlib import asynccontextmanager
+from src.db.main import init_db
+# from dotenv import load_dotenv
+
+# load_dotenv()
+
+version = "v1"
+ROOT_ROUTE = settings.ROOT_ROUTE
+
+@asynccontextmanager
+async def life_span(app: FastAPI):
+    print("Server has Started Running...")
+    try:
+        await init_db()
+    except:
+        print("Database Connection Failed")
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY, detail="Database Connection Failed")
+    yield
+    print("Server Stopped Running!")
+
+app = FastAPI(
+    title="Bookly",
+    description="A REST app of Books Library",
+    version= version
+)
+
+# Add Books Router
+
+app.include_router(book_router, prefix=f"{ROOT_ROUTE}/{version}", tags=["books"])
+app.include_router(user_router, prefix=f"{ROOT_ROUTE}/{version}/auth", tags=["auth"])
+
