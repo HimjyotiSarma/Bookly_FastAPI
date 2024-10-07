@@ -1,7 +1,7 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, status, Depends
 from sqlmodel import select, desc, delete
-from .models import Book
+from src.db.models import Book
 from .schemas import BookCreate, BookUpdate
 from datetime import datetime
 from src.auth.dependencies import AccessTokenBearer

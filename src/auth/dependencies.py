@@ -6,7 +6,7 @@ from .utils import decode_token
 from src.db.redis import token_in_blacklist
 from src.db.main import get_session
 from src.auth.service import UserService
-from .model import User
+from src.db.models import User
 
 
 user_service = UserService()

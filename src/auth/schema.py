@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr
 import uuid
 from typing import Optional, List
-from src.books.models import Book
+from src.db.models import Book
 from datetime import datetime
 from enum import Enum
 

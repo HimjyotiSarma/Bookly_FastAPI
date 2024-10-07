@@ -1,5 +1,5 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
-from .model import User
+from src.db.models import User
 from sqlmodel import select, update, delete
 from fastapi import HTTPException, status
 from .schema import UserCreateModal
