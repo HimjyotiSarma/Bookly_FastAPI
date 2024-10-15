@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, EmailStr
 import uuid
 from typing import Optional, List
 from src.db.models import Book
+from src.reviews.schema import ReviewModal
 from datetime import datetime
 from enum import Enum
 
@@ -13,12 +14,14 @@ from enum import Enum
 #     viewer = "viewer"
 #     guest = "guest"
 
+
 class UserCreateModal(BaseModel):
     firstname: str
     lastname: Optional[str]
     username: str = Field(min_length=5)
     email: EmailStr
     password: str = Field(min_length=5)
+
 
 class UserResponseModal(BaseModel):
     uid: uuid.UUID
@@ -31,8 +34,11 @@ class UserResponseModal(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
 class UserBookModal(UserResponseModal):
-     books: List[Book]
+    books: List[Book]
+    reviews: List[ReviewModal]
+
 
 class UserLoginModal(BaseModel):
     email: str

@@ -5,41 +5,31 @@ from sqlalchemy.schema import ForeignKey
 from typing import List, Optional
 from datetime import datetime, date
 import uuid
+
 # from src.db import models
 
+
 class Book(SQLModel, table=True):
-    __tablename__="books"
+    __tablename__ = "books"
     uid: uuid.UUID = Field(
-        sa_column=Column(
-            pg.UUID,
-            primary_key=True,
-            nullable=False,
-            default=uuid.uuid4
-        )
+        sa_column=Column(pg.UUID, primary_key=True, nullable=False, default=uuid.uuid4)
     )
     Title: str
     Author: str
     Publication_Year: date
     user_uid: uuid.UUID = Field(
         sa_column=Column(
-            pg.UUID,
-            ForeignKey("users.uid", ondelete="CASCADE"),
-            nullable=False
+            pg.UUID, ForeignKey("users.uid", ondelete="CASCADE"), nullable=False
         )
     )
-    Genre: List[str] = Field(
-        sa_column=Column(
-            pg.ARRAY(pg.VARCHAR),
-            nullable=True
-        )
-    )
+    Genre: List[str] = Field(sa_column=Column(pg.ARRAY(pg.VARCHAR), nullable=True))
     user: Optional["User"] = Relationship(back_populates="books")
-    reviews: List["Reviews"] = Relationship(back_populates="book", sa_relationship_kwargs={'lazy': 'selectin'})
+    reviews: List["Review"] = Relationship(
+        back_populates="book", sa_relationship_kwargs={"lazy": "selectin"}
+    )
     created_at: datetime = Field(
         sa_column=Column(
-            pg.TIMESTAMP(timezone=True),
-            nullable=False,
-            default=datetime.now
+            pg.TIMESTAMP(timezone=True), nullable=False, default=datetime.now
         )
     )
     updated_at: datetime = Field(
@@ -47,7 +37,7 @@ class Book(SQLModel, table=True):
             pg.TIMESTAMP(timezone=True),
             nullable=False,
             default=datetime.now,
-            onupdate=datetime.now
+            onupdate=datetime.now,
         )
     )
 
@@ -55,40 +45,20 @@ class Book(SQLModel, table=True):
         UniqueConstraint("Title", "Author", "user_uid", name="unique_title_author"),
     )
 
-
     def __repr__(self) -> str:
         return f"<Book {self.Title} of {self.Author}>"
-    
+
+
 class User(SQLModel, table=True):
-    __tablename__ = 'users'
+    __tablename__ = "users"
     uid: uuid.UUID = Field(
-        sa_column=Column(
-            pg.UUID,
-            nullable=False,
-            primary_key=True,
-            default=uuid.uuid4
-        )
+        sa_column=Column(pg.UUID, nullable=False, primary_key=True, default=uuid.uuid4)
     )
     username: str = Field(
-        sa_column=Column(
-            pg.VARCHAR(100),
-            nullable=False,
-            unique=True
-        )
+        sa_column=Column(pg.VARCHAR(100), nullable=False, unique=True)
     )
-    email: str = Field(
-        sa_column=Column(
-            pg.VARCHAR(255),
-            nullable=False,
-            unique=True
-        )
-    )
-    firstname: str = Field(
-        sa_column=Column(
-            pg.VARCHAR(50),
-            nullable=False
-        )
-    )
+    email: str = Field(sa_column=Column(pg.VARCHAR(255), nullable=False, unique=True))
+    firstname: str = Field(sa_column=Column(pg.VARCHAR(50), nullable=False))
     lastname: str = Field(
         sa_column=Column(
             pg.VARCHAR(50),
@@ -96,21 +66,17 @@ class User(SQLModel, table=True):
         )
     )
     is_verified: bool = Field(
-        sa_column=Column(
-            pg.BOOLEAN,
-            nullable=False,
-            default=False
-        )
+        sa_column=Column(pg.BOOLEAN, nullable=False, default=False)
     )
-    books: List["Book"] = Relationship(back_populates="user", sa_relationship_kwargs={'lazy': 'selectin'})
-    reviews: List["Reviews"] = Relationship(back_populates="user", sa_relationship_kwargs={'lazy': 'selectin'})
+    books: List["Book"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    reviews: List["Review"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )
 
     role: str = Field(
-        sa_column=Column(
-            pg.VARCHAR(20),
-            nullable=False,
-            server_default=text("'user'")
-        )
+        sa_column=Column(pg.VARCHAR(20), nullable=False, server_default=text("'user'"))
     )
     password_hash: str = Field(
         sa_column=Column(
@@ -121,9 +87,7 @@ class User(SQLModel, table=True):
     )
     created_at: datetime = Field(
         sa_column=Column(
-            pg.TIMESTAMP(timezone=True),
-            nullable=False,
-            default = datetime.now
+            pg.TIMESTAMP(timezone=True), nullable=False, default=datetime.now
         )
     )
     updated_at: datetime = Field(
@@ -131,59 +95,45 @@ class User(SQLModel, table=True):
             pg.TIMESTAMP(timezone=True),
             nullable=False,
             default=datetime.now,
-            onupdate=datetime.now
+            onupdate=datetime.now,
         )
     )
-
-
 
     def __repr__(self):
         return f"<User {self.username}>"
-    
-class Reviews(SQLModel, table = True):
+
+
+class Review(SQLModel, table=True):
+    __tablename__ = "reviews"
     uid: uuid.UUID = Field(
-        sa_column=Column(
-            pg.UUID,
-            nullable=False,
-            primary_key=True,
-            default=uuid.uuid4
-        )
+        sa_column=Column(pg.UUID, nullable=False, primary_key=True, default=uuid.uuid4)
     )
     rating: int = Field(
-        ge=1, le=5,
+        ge=1,
+        le=5,
         sa_column=Column(
             pg.INTEGER,
             nullable=False,
-        )
+        ),
     )
-    review_text: str =Field(
-        min_length=5,
-        sa_column=Column(
-            pg.VARCHAR(250),
-            nullable=False
-        )
+    review_text: str = Field(
+        min_length=5, sa_column=Column(pg.VARCHAR(250), nullable=False)
     )
     user_uid: uuid.UUID = Field(
         sa_column=Column(
-            pg.UUID,
-            ForeignKey("users.uid", ondelete="CASCADE"),
-            nullable=False
+            pg.UUID, ForeignKey("users.uid", ondelete="CASCADE"), nullable=False
         )
     )
     book_uid: uuid.UUID = Field(
         sa_column=Column(
-            pg.UUID,
-            ForeignKey("books.uid", ondelete="CASCADE"),
-            nullable=False
+            pg.UUID, ForeignKey("books.uid", ondelete="CASCADE"), nullable=False
         )
     )
     user: Optional["User"] = Relationship(back_populates="reviews")
     book: Optional["Book"] = Relationship(back_populates="reviews")
     created_at: datetime = Field(
         sa_column=Column(
-            pg.TIMESTAMP(timezone=True),
-            nullable=False,
-            default=datetime.now
+            pg.TIMESTAMP(timezone=True), nullable=False, default=datetime.now
         )
     )
     updated_at: datetime = Field(
@@ -191,10 +141,9 @@ class Reviews(SQLModel, table = True):
             pg.TIMESTAMP(timezone=True),
             nullable=False,
             default=datetime.now,
-            onupdate=datetime.now
+            onupdate=datetime.now,
         )
     )
+
     def __repr__(self) -> str:
         return f"<Review for book {self.book_uid} by user {self.user_uid}>"
-
-
