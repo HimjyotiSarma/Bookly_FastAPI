@@ -9,6 +9,13 @@ import uuid
 # from src.db import models
 
 
+class BookTag(SQLModel, table=True):
+    book_uid: uuid.UUID = Field(default=None, foreign_key="books.uid", primary_key=True)
+    tag_uid: uuid.UUID = Field(default=None, foreign_key="tag.uid", primary_key=True)
+
+    __table_args__ = (UniqueConstraint("book_uid", "tag_uid", name="unique_book_tag"),)
+
+
 class Book(SQLModel, table=True):
     __tablename__ = "books"
     uid: uuid.UUID = Field(
@@ -24,6 +31,7 @@ class Book(SQLModel, table=True):
     )
     Genre: List[str] = Field(sa_column=Column(pg.ARRAY(pg.VARCHAR), nullable=True))
     user: Optional["User"] = Relationship(back_populates="books")
+    tags: List["Tag"] = Relationship(back_populates="books", link_model=BookTag)
     reviews: List["Review"] = Relationship(
         back_populates="book", sa_relationship_kwargs={"lazy": "selectin"}
     )
@@ -147,3 +155,17 @@ class Review(SQLModel, table=True):
 
     def __repr__(self) -> str:
         return f"<Review for book {self.book_uid} by user {self.user_uid}>"
+
+
+class Tag(SQLModel, table=True):
+    __tablename__ = "tag"
+
+    uid: uuid.UUID = Field(
+        sa_column=Column(pg.UUID, primary_key=True, nullable=False, default=uuid.uuid4)
+    )
+    name: str = Field(sa_column=Column(pg.VARCHAR(240), nullable=False))
+    created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
+    books: List["Book"] = Relationship(back_populates="tags", link_model=BookTag)
+
+    def __repr__(self) -> str:
+        return f"<Tag {self.name}>"
