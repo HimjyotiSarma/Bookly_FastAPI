@@ -31,7 +31,11 @@ class Book(SQLModel, table=True):
     )
     Genre: List[str] = Field(sa_column=Column(pg.ARRAY(pg.VARCHAR), nullable=True))
     user: Optional["User"] = Relationship(back_populates="books")
-    tags: List["Tag"] = Relationship(back_populates="books", link_model=BookTag)
+    tags: List["Tag"] = Relationship(
+        back_populates="books",
+        link_model=BookTag,
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
     reviews: List["Review"] = Relationship(
         back_populates="book", sa_relationship_kwargs={"lazy": "selectin"}
     )
@@ -165,7 +169,11 @@ class Tag(SQLModel, table=True):
     )
     name: str = Field(sa_column=Column(pg.VARCHAR(240), nullable=False))
     created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
-    books: List["Book"] = Relationship(back_populates="tags", link_model=BookTag)
+    books: List["Book"] = Relationship(
+        back_populates="tags",
+        link_model=BookTag,
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
 
     def __repr__(self) -> str:
         return f"<Tag {self.name}>"

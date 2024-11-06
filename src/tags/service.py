@@ -47,13 +47,21 @@ class TagService:
         self, tag_list: TagAddModal, book_uid: str, session: AsyncSession
     ):
         try:
-            book = await book_service.get_single_book(book_uid)
+            book = await book_service.get_single_book(book_uid, session)
+            print("<----BOOK INFO---->", book)
+            if not book:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Book with UID {book_uid} not found.",
+                )
+
             for tag_info in tag_list.tags:
                 statement = select(Tag).where(Tag.name == tag_info.name)
                 result = await session.exec(statement)
                 tag_data = result.one_or_none()
                 if not tag_data:
                     tag_data = Tag(name=tag_info.name)
+                    session.add(tag_data)
                 book.tags.append(tag_data)
 
             session.add(book)
@@ -87,24 +95,26 @@ class TagService:
 
     async def add_tag(self, tag_data: TagCreateModal, session: AsyncSession):
         try:
-            tag_info = await self.get_single_tag(tag_data.name)
-            is_Tag_Exist = True if tag_info else None
-            if is_Tag_Exist:
+            # Check if the tag already exists
+            existing_tag = await self.get_single_tag(tag_data.name, session)
+            if existing_tag:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail=f"Tag with name {str(tag_data.name)} already Exist.",
+                    detail=f"Tag with name {tag_data.name} already exists.",
                 )
-            create_tag_info = Tag(name=tag_data.name)
-            await session.add(create_tag_info)
+
+            # Create and add a new tag if not existing
+            new_tag = Tag(name=tag_data.name)
+            session.add(new_tag)
             await session.commit()
-            await session.refresh(create_tag_info)
-            return create_tag_info
+            await session.refresh(new_tag)
+            return new_tag
 
         except Exception as e:
             await session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                detail=f"Error Creating Tag : {str(e)}",
+                detail=f"Error creating tag: {e}",
             )
 
     async def update_tag(
@@ -133,6 +143,7 @@ class TagService:
             return JSONResponse(
                 content={"message": f"Tag '{tag_info.name}' deleted successfully"},
                 status_code=status.HTTP_202_ACCEPTED,
+                media_type="application/json",
             )
 
         except Exception as e:

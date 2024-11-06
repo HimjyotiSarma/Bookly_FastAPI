@@ -36,13 +36,21 @@ class BooksService:
             )
 
     async def get_single_book(self, book_id: str, session: AsyncSession):
-        statement = (
-            select(Book).where(Book.uid == book_id).options(selectinload(Book.reviews))
-        )
-        result = await session.exec(statement)
-        book = result.first()
+        try:
+            statement = (
+                select(Book)
+                .where(Book.uid == book_id)
+                .options(selectinload(Book.reviews))
+            )
+            result = await session.exec(statement)
+            book = result.first()
 
-        return book
+            return book
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Error getting Book : {str(e)}",
+            )
 
     async def create_book(
         self, book_data: BookCreate, user_uuid: str, session: AsyncSession

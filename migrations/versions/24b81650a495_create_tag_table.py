@@ -1,8 +1,8 @@
-"""Create Tag Modal
+"""Create Tag Table
 
-Revision ID: b7764d899677
+Revision ID: 24b81650a495
 Revises: 5795b97c6b67
-Create Date: 2024-10-28 21:34:10.091113
+Create Date: 2024-11-06 21:47:23.741489
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'b7764d899677'
+revision: str = '24b81650a495'
 down_revision: Union[str, None] = '5795b97c6b67'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

@@ -3,6 +3,7 @@ from typing import List, Optional
 from datetime import datetime, date
 import uuid
 from src.reviews.schema import ReviewModal
+from src.tags.schemas import TagCreateModal
 
 
 class Book(BaseModel):
@@ -37,3 +38,7 @@ class BookCreate(BaseModel):
     Author: str
     Publication_Year: str
     Genre: List[str]
+
+
+class BookTags(Book):
+    tags: List[TagCreateModal]
