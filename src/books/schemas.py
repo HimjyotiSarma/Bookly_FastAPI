@@ -19,8 +19,9 @@ class Book(BaseModel):
         from_attributes = True
 
 
-class BookReviewModal(Book):
+class BookDetailModal(Book):
     reviews: List[ReviewModal]
+    tags: List[TagCreateModal]
 
     class Config:
         from_attributes = True

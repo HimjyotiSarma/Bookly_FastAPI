@@ -6,12 +6,14 @@ from src.reviews.routes import reviews_router
 from .config import settings
 from contextlib import asynccontextmanager
 from src.db.main import init_db
+from .middleware import register_middleware
 
 # from dotenv import load_dotenv
 
 # load_dotenv()
 
-version = "v1"
+
+version = settings.VERSION
 ROOT_ROUTE = settings.ROOT_ROUTE
 
 
@@ -34,11 +36,16 @@ app = FastAPI(
     title="Bookly", description="A REST app of Books Library", version=version
 )
 
-# Add Books Router
+# Register Middleware
 
-app.include_router(book_router, prefix=f"{ROOT_ROUTE}/{version}", tags=["books"])
-app.include_router(user_router, prefix=f"{ROOT_ROUTE}/{version}/auth", tags=["auth"])
+register_middleware(app)
+
+
+# Add Routers
+
+app.include_router(book_router, prefix=f"/{ROOT_ROUTE}/{version}", tags=["books"])
+app.include_router(user_router, prefix=f"/{ROOT_ROUTE}/{version}/auth", tags=["auth"])
 app.include_router(
-    reviews_router, prefix=f"{ROOT_ROUTE}/{version}/reviews", tags=["reviews"]
+    reviews_router, prefix=f"/{ROOT_ROUTE}/{version}/reviews", tags=["reviews"]
 )
-app.include_router(tag_router, prefix=f"{ROOT_ROUTE}/{version}/tags", tags=["tags"])
+app.include_router(tag_router, prefix=f"/{ROOT_ROUTE}/{version}/tags", tags=["tags"])

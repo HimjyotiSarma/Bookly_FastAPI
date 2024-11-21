@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, HTTPException, Depends, dependencies
-from src.books.schemas import Book, BookUpdate, BookCreate, BookReviewModal
+from src.books.schemas import Book, BookUpdate, BookCreate, BookDetailModal
 from typing import List
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.main import get_session
@@ -26,7 +26,7 @@ async def get_all_books(
 
 # Get a Book
 @book_router.get(
-    "/book/{book_uid}", response_model=BookReviewModal, dependencies=[user_checker]
+    "/book/{book_uid}", response_model=BookDetailModal, dependencies=[user_checker]
 )
 async def get_single_book(
     book_uid: str,

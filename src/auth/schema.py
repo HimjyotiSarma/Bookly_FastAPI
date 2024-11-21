@@ -43,3 +43,9 @@ class UserBookModal(UserResponseModal):
 class UserLoginModal(BaseModel):
     email: str
     password: str
+
+
+class EmailModal(BaseModel):
+    addresses: list[EmailStr]
+    subject: Optional[str] = None
+    body: Optional[str] = None

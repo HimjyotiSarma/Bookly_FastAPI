@@ -86,3 +86,22 @@ class UserService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Error creating User : {str(e)}",
             )
+
+    async def update_user(self, user: User, update_data: dict, session: AsyncSession):
+        try:
+            for key, value in update_data.items():
+                if hasattr(user, key):
+                    setattr(user, key, value)
+                else:
+                    raise ValueError(f"Invalid attribute: {key}")
+            await session.commit()
+            await session.refresh(user)
+            return {
+                "message": f"Account with username {user.username} updated successfully"
+            }
+        except Exception as e:
+            await session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Error Updating User : {str(e)}",
+            )
