@@ -10,6 +10,8 @@ from .schema import (
     UserLoginModal,
     UserBookModal,
     EmailModal,
+    PasswordResetRequestModal,
+    NewPasswordModal,
 )
 from .service import UserService
 from .utils import verify_pass, create_access_token
@@ -97,7 +99,6 @@ async def create_user(
             create_user_data = await user_service.create_user(user_data, session)
 
             safe_token = create_safe_token(data={"email": email})
-            print("domain name: ", settings.DOMAIN)
             verification_email_link = f"http://{settings.DOMAIN}/{settings.ROOT_ROUTE}/{settings.VERSION}/auth/verify/{safe_token}"
             # html_message = await get_verify_mail_template(
             #     user_name=user_data.firstname, verification_url=verification_email_link
@@ -109,7 +110,6 @@ async def create_user(
                 verification_url=verification_email_link,
                 current_year=datetime.today().year,
             )
-            print("HTML MESSAGE : -> ", html_message)
             email_response_model = EmailModal(
                 addresses=[email], subject="Verify your Account", body=html_message
             )
@@ -183,7 +183,8 @@ async def verify_account(token: str, session: AsyncSession = Depends(get_session
     update_user = await user_service.update_user(user, {"is_verified": True}, session)
     return JSONResponse(
         content={
-            "message": f"User with username {user.username} is Verified Successfully"
+            "message": f"User with username {user.username} is Verified Successfully",
+            "data": user_email,
         },
         status_code=status.HTTP_200_OK,
     )
@@ -192,7 +193,7 @@ async def verify_account(token: str, session: AsyncSession = Depends(get_session
 @user_router.get(
     "/me", response_model=UserBookModal, response_model_exclude={"password_hash"}
 )
-async def get_current_user(user=Depends(get_current_user)):
+async def current_user(user=Depends(get_current_user)):
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -227,3 +228,88 @@ async def revoke_token(token_data: dict = Depends(AccessTokenBearer())):
     return JSONResponse(
         content={"message": "Logged Out Successfully"}, status_code=status.HTTP_200_OK
     )
+
+
+# Create a Password Reset Link Email Route
+@user_router.post("/password_reset_request")
+async def password_reset_request(
+    user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    try:
+        user_dict = user.model_dump()
+        email = user_dict.get("email")
+
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid Email or Email not present in the request. Please check the Email address and try again.",
+            )
+
+        # user = await user_service.get_user(email, session)
+        safe_token = create_safe_token({"email": email})
+        reset_link = f"http://{settings.DOMAIN}/{settings.ROOT_ROUTE}/{settings.VERSION}/auth/password_reset_confirm/{safe_token}"
+
+        html_message = templates.get_template("password_reset_template.html").render(
+            username=user.username,
+            reset_link=reset_link,
+            current_year=datetime.today().year,
+        )
+
+        email_response_modal = EmailModal(
+            addresses=[email], subject="Reset your password", body=html_message
+        )
+        await send_mail(email_response_modal)
+        return JSONResponse(
+            content={
+                "message": "Please reset the Password using the link sent to your email"
+            },
+            status_code=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        # Log the error for debugging
+        # logger.error(f"Password reset request failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while processing the password reset request.",
+        )
+
+
+@user_router.post("/password_reset_confirm/{token}")
+async def reset_password_response(
+    token: str,
+    new_password_details: NewPasswordModal,
+    session: AsyncSession = Depends(get_session),
+):
+    try:
+        new_password = new_password_details.password
+        confirm_password = new_password_details.confirm_password
+
+        if new_password != confirm_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password and confirm password do not match.",
+            )
+
+        token_details = decode_safe_token(token)
+        if not token_details:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token.",
+            )
+        email = token_details.get("email")
+        user = await user_service.get_user(email, session)
+        update_user_password = await user_service.update_password(
+            user, new_password, session
+        )
+        return JSONResponse(
+            content={
+                "message": "Password updated successfully. Please log in with your new password."
+            },
+            status_code=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Password Update Error: {str(e)}",
+        )

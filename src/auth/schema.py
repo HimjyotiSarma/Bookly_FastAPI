@@ -49,3 +49,12 @@ class EmailModal(BaseModel):
     addresses: list[EmailStr]
     subject: Optional[str] = None
     body: Optional[str] = None
+
+
+class PasswordResetRequestModal(BaseModel):
+    email: EmailStr
+
+
+class NewPasswordModal(BaseModel):
+    password: str
+    confirm_password: str

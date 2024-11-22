@@ -4,6 +4,7 @@ from sqlmodel import select, update, delete
 from fastapi import HTTPException, status
 from .schema import UserCreateModal
 from .utils import generate_pass_hash
+from fastapi.responses import JSONResponse
 
 
 class UserService:
@@ -104,4 +105,25 @@ class UserService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Error Updating User : {str(e)}",
+            )
+
+    async def update_password(
+        self, user: User, new_password: str, session: AsyncSession
+    ):
+        try:
+            password_hash = generate_pass_hash(new_password)
+            user.password_hash = password_hash
+            await session.commit()
+            await session.refresh(user)
+            return JSONResponse(
+                content={
+                    "message": f"User with username {user.username}'s password has been updated successfully. Please Login to your account with the new password"
+                },
+                status_code=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            await session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Something went wrong when updating password: {str(e)}",
             )
