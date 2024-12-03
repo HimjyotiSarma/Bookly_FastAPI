@@ -6,8 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     JWT_PRIVATE: str
     JWT_ALGORITHM: str
-    REDIS_HOST: str
-    REDIS_PORT: int
+    REDIS_URL: str
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
     MAIL_FROM: str
@@ -28,3 +27,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+broker_url = settings.REDIS_URL
+result_backend = settings.REDIS_URL
+broker_connection_retry_on_startup = True

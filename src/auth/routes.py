@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.requests import Request
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -28,6 +28,7 @@ from src.config import settings
 from .utils import create_safe_token, decode_safe_token
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
+from src.celery_tasks import send_bg_email
 
 
 # Register Jinja Template
@@ -59,7 +60,7 @@ async def get_verify_mail_template(
 
 
 @user_router.post("/send_mail")
-async def send_mail(emails: EmailModal):
+async def send_mail(emails: EmailModal, background_tasks: BackgroundTasks):
     try:
         default_subject = "Authenticate your Email"
         default_body = "<h1>Welcome to the new Email Services</h1><br><h2>Authenticate by clicking your email below</h2>"
@@ -68,7 +69,13 @@ async def send_mail(emails: EmailModal):
             subject=emails.subject or default_subject,
             body=emails.body or default_body,
         )
-        await mail.send_message(message)
+        # await mail.send_message(message)
+        # email_addresses = emails.addresses
+        # subject = emails.subject or default_subject
+        # body = emails.body or default_body
+
+        # send_bg_email.delay(recipients=email_addresses, subject=subject, body=body)
+        background_tasks.add_task(mail.send_message, message)
         return JSONResponse(
             content={"message": "Email sent successfully"},
             status_code=status.HTTP_201_CREATED,
@@ -114,6 +121,7 @@ async def create_user(
                 addresses=[email], subject="Verify your Account", body=html_message
             )
             await send_mail(email_response_model)
+
             return create_user_data
         except Exception as e:
             raise HTTPException(
