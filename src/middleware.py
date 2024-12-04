@@ -34,6 +34,6 @@ def register_middleware(app: FastAPI):
         allowed_hosts=[
             "localhost",
             "127.0.0.1",
-            "https://bookly-fastapi-p5dd.onrender.com",
+            "bookly-fastapi-p5dd.onrender",
         ],
     )
