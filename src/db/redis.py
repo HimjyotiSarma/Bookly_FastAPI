@@ -5,15 +5,15 @@ JTI_EXPIRY = 3600  # Expiry time in seconds
 
 # Initialize async Redis client
 
-# Old Code
-# client = aioredis.Redis(
-#     host=settings.REDIS_HOST,
-#     port=settings.REDIS_PORT,
-#     decode_responses=True,  # Ensure responses are decoded to strings
-#     db=0
-# )
+client = aioredis.Redis(
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
+    decode_responses=True,  # Ensure responses are decoded to strings
+    username=settings.REDIS_USERNAME,
+    password=settings.REDIS_PASSWORD,
+)
 
-client = aioredis.from_url(settings.REDIS_URL)
+# client = aioredis.from_url(settings.REDIS_URL)
 
 
 # Asynchronous function to add JTI to the blacklist with expiry

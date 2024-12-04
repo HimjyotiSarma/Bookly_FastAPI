@@ -7,7 +7,11 @@ class Settings(BaseSettings):
     JWT_PRIVATE: str
     JWT_ALGORITHM: str
     REDIS_URL: str
-    MAIL_USERNAME: str
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_USERNAME: str
+    REDIS_PASSWORD: str
+    MAIL_USERNAME: str = "default"
     MAIL_PASSWORD: str
     MAIL_FROM: str
     MAIL_PORT: int
