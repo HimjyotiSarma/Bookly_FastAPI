@@ -92,7 +92,9 @@ async def send_mail(emails: EmailModal, background_tasks: BackgroundTasks):
     response_model_exclude={"password_hash"},
 )
 async def create_user(
-    user_data: UserCreateModal, session: AsyncSession = Depends(get_session)
+    user_data: UserCreateModal,
+    backgroundTask: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
 ):
     email = user_data.email
 
@@ -120,7 +122,7 @@ async def create_user(
             email_response_model = EmailModal(
                 addresses=[email], subject="Verify your Account", body=html_message
             )
-            await send_mail(email_response_model)
+            await send_mail(email_response_model, backgroundTask)
 
             return create_user_data
         except Exception as e:
